@@ -1,11 +1,17 @@
 {
-  "current": "v1",
+  "current": "v2",
   "versions": [
     {
       "id": "v1",
       "path": "/versions/v1/",
       "released": "2026-06-17T14:54:43-07:00",
       "label": "Initial versioned release \u2014 corrected mesh framing, added revision bar"
+    },
+    {
+      "id": "v2",
+      "path": "/versions/v2/",
+      "released": "2026-06-17T14:59:38-07:00",
+      "label": "Researched & fleshed out every featured repo; sharper narrative"
     }
   ]
 }
