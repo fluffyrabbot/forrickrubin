@@ -17,6 +17,55 @@ TAGLINE_OVERRIDES = {
     "psychosismv": "Rapidfire LLM-journey music video — a beat-synced Remotion renderer.",
 }
 
+# The Right Questions — creative pipeline showcase. Episode count is read live
+# from the deployed build; the curated episode picks and pipeline copy are
+# editorial. The studio takes a question to a published episode in under 10 min.
+TRQ_SITE = "https://therightquestions.pages.dev"
+
+TRQ_PIPELINE = [
+    {"stage": "Topic", "tool": "a real question", "detail": "A question worth asking — policy, history, AI risk, finance."},
+    {"stage": "Research", "tool": "Brave + Browserbase", "detail": "A grounded brief from the open web: Brave Search for breadth, Browserbase Fetch to get past anti-bot gating for primary sources like gov PDFs."},
+    {"stage": "Script", "tool": "show-runner + writer", "detail": "An episode plan with fact assignment, then a rapidfire spoken script calibrated to the channel's ~112 wpm cadence."},
+    {"stage": "Voice", "tool": "ElevenLabs", "detail": "Narration with character-level alignment → master audio, pitch-preserved speed cuts, per-section clips, and upload-ready captions."},
+    {"stage": "Publish", "tool": "Cloudflare Pages", "detail": "A static episode page with audio, captions, and a works-cited description — deployed and live."},
+]
+
+TRQ_EPISODES = [
+    {"title": "The Venice Code: Can a 1,000-Year-Old Republic Fix Our State?", "path": "/episodes/2026-06-14-133636-what-aspects-of-the-statecraft-of-the-venetian-republic-migh/", "dur": "6.0", "topic": "History", "blurb": "What the Venetian Republic's anti-faction machinery can teach a modern state."},
+    {"title": "Who Controls Your Next Meal?", "path": "/episodes/2026-06-14-the-relationship-between-the-state-and-food-security/", "dur": "4.3", "topic": "Policy", "blurb": "The state's hand in food security, and the most interesting policy thinking on it — the question that started the channel."},
+    {"title": "The Wrong Lever: Why the AI Safety Movement Talks to the Wrong Audience", "path": "/episodes/2026-06-15-165246-the-decision-makers-who-control-the-ai-race-are-not-tiktok-a/", "dur": "3.9", "topic": "AI risk", "blurb": "The people steering the AI race aren't on TikTok — so why is the messaging aimed there?"},
+    {"title": "Is Worrying About AI's Power Bill Quietly Anti-Climate?", "path": "/episodes/2026-06-16-142259-ai-power-consumption-climate-innovation-either-way/", "dur": "13.4", "topic": "AI · deep", "blurb": "AI's energy appetite as a climate question — with a counterintuitive answer either way."},
+    {"title": "The Rent-Seeking Tax: Making Extraction Visible", "path": "/episodes/2026-06-14-150952-rent-seeking-vocab-policy-cut/", "dur": "3.4", "topic": "Economics", "blurb": "Rent-seeking as the real villain, and how to make extraction legible."},
+    {"title": "The Real BlackRock Problem", "path": "/episodes/2026-06-15-151431-blackrock-conspiracism-is-mostly-financially-illiterate-it-c/", "dur": "3.0", "topic": "Finance", "blurb": "Most BlackRock conspiracism is financially illiterate; here's the problem actually worth naming."},
+]
+
+
+def build_trq() -> dict:
+    trq = APPS / "therightquestions"
+    published = trq / "dist" / "episodes"
+    count = (
+        sum(1 for d in published.iterdir() if d.is_dir())
+        if published.is_dir()
+        else len(TRQ_EPISODES)
+    )
+    return {
+        "site": TRQ_SITE,
+        "episode_count": count,
+        "max_minutes": 10,
+        "pipeline": TRQ_PIPELINE,
+        "episodes": [
+            {
+                "title": ep["title"],
+                "url": TRQ_SITE + ep["path"],
+                "dur": ep["dur"],
+                "topic": ep["topic"],
+                "blurb": ep["blurb"],
+            }
+            for ep in TRQ_EPISODES
+        ],
+    }
+
+
 # The verticals that live *inside* mesh. Crate counts are computed live from
 # mesh/crates by matching directory-name prefixes, so the numbers never drift
 # from the codebase. Each plane is an editorial grouping; the breadth is the point.
@@ -275,6 +324,7 @@ def main() -> None:
             "commits_7d": sum(repo["c7"] for repo in owned),
         },
         "mesh": build_mesh(repos),
+        "trq": build_trq(),
         "featured": {
             "flagship": ["mesh", "rexxy", "stricttutor"],
             "creative": [
@@ -301,8 +351,8 @@ def main() -> None:
                 "detail": "Studio-grade ed-tech run as a governed agent factory: a task registry, a parallel-execution playbook, and changed-file quality gates hold AI contributors to release-evidence contracts instead of vibes.",
             },
             "therightquestions": {
-                "burst": "35 commits in 4 days",
-                "detail": "A YouTube studio that turns a big question into a published episode — grounded web research → rapidfire script → ElevenLabs voiceover. Brave Search and Browserbase Fetch reach un-gated primary sources; cheap models synthesize, stronger agents author assets directly.",
+                "burst": "25 episodes · <10 min each",
+                "detail": "A YouTube studio that turns a big question into a published episode in under ten minutes end to end — grounded web research → rapidfire script → ElevenLabs voiceover. 25 episodes shipped and live at therightquestions.pages.dev, spanning food policy, AI risk, finance, and history.",
             },
             "rabbotchan": {
                 "burst": "186 commits",
