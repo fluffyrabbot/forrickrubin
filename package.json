@@ -1,0 +1,10 @@
+{
+  "name": "forrickrubin",
+  "private": true,
+  "description": "Git-log-driven portfolio showcase for YC AI Summer Residency",
+  "scripts": {
+    "generate": "python3 scripts/generate.py",
+    "serve": "python3 -m http.server 8787",
+    "deploy": "npm run generate && npx wrangler pages deploy . --project-name=forrickrubin"
+  }
+}
