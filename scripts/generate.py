@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +16,162 @@ TAGLINE_OVERRIDES = {
     "fmarch": "From-scratch forum + messaging platform built around forum-mafia — event-sourced Rust.",
     "psychosismv": "Rapidfire LLM-journey music video — a beat-synced Remotion renderer.",
 }
+
+# The verticals that live *inside* mesh. Crate counts are computed live from
+# mesh/crates by matching directory-name prefixes, so the numbers never drift
+# from the codebase. Each plane is an editorial grouping; the breadth is the point.
+MESH_PLANES = [
+    {
+        "name": "Products — the v-OS platform",
+        "blurb": "Consumer apps that sit on the substrate. E2EE sync, server-blind search, 80% of revenue to user-chosen charities.",
+        "verticals": [
+            {
+                "name": "memorise",
+                "prefixes": ["memorise", "mesh-memorise", "mesh-extension-memorise", "tauri-plugin-memorise"],
+                "detail": "Universal encrypted memory — drag anything, search everything. E2EE sync with server-blind tokens, spaced repetition, and Zettelkasten knowledge graphs across desktop, extension, and CLI.",
+            },
+            {
+                "name": "v-OS",
+                "prefixes": ["v-os", "v-text", "v-cli", "v-protocol"],
+                "detail": "A universal versioning platform: undo for text, files, and archives; the editable web (v://, fork/improve/merge), crowd annotations, and translations — all flowing back into memory.",
+            },
+        ],
+    },
+    {
+        "name": "Cultural monuments — educational games",
+        "blurb": "Monument-grade games that demonstrate event sourcing, teach systems thinking, and preserve computing history.",
+        "verticals": [
+            {
+                "name": "Monument-grade games",
+                "games": True,
+                "detail": "memorial-gardens (Turing, Lovelace, Hopper), museum, genetics, harmonic, factory-factory, archipelago, duplicator, idle-clicker, collider — event sourcing taught through play, built to monument quality.",
+            },
+        ],
+    },
+    {
+        "name": "Infrastructure — the developer platform",
+        "blurb": "The surprising breadth: one server workspace spans crypto, search, supply chain, compliance, mocap, and more — each a real crate family.",
+        "verticals": [
+            {
+                "name": "Event store & crypto core",
+                "prefixes": ["mesh-crypto", "mesh-domain", "mesh-repo", "mesh-blob", "mesh-events-http", "mesh-memcore", "mesh-client"],
+                "detail": "Append-only E2EE event store: Argon2id / HKDF / XChaCha20 crypto, content-addressed blobs, monotonic sequencing, and a type-safe domain where illegal states fail to compile.",
+            },
+            {
+                "name": "Blind search",
+                "prefixes": ["mesh-search"],
+                "detail": "Server-assisted encrypted search via HMAC-blinded, epoch-rotated tokens — the server helps you search without ever reading your queries.",
+            },
+            {
+                "name": "Topology compiler (forge)",
+                "prefixes": ["forge", "mesh-network"],
+                "detail": "A protocol DSL: TOML specs compile to typed Rust edge binaries and heterogeneous Docker + mTLS topologies with zero-knowledge routing.",
+            },
+            {
+                "name": "Intent orchestration (archon)",
+                "prefixes": ["archon"],
+                "detail": "High-level intent expanded into durable, observable workflows — spec-driven deployment to bare metal or Kubernetes with guardrails and backups.",
+            },
+            {
+                "name": "Factory & supply chain",
+                "prefixes": ["mesh-factory", "mesh-build-factory", "mesh-verify"],
+                "detail": "Ed25519 certification chains (Factory³ → Factory² → Factory¹ → product) with capability manifests, offline attestation, and transparency logs.",
+            },
+            {
+                "name": "Compliance automation (notaio)",
+                "prefixes": ["notaio", "lysergic"],
+                "detail": "PCI, HIPAA, SOC2, and GDPR templates compiled into signed evidence bundles.",
+            },
+            {
+                "name": "Collaborative editing",
+                "prefixes": ["mesh-collab", "mesh-memory-rewind"],
+                "detail": "CRDT collaboration with O(1) undo/redo and git-like branching timeline scrubbing on a rope-based, WASM-ready core.",
+            },
+            {
+                "name": "Mastery engine",
+                "prefixes": ["mesh-mastery"],
+                "detail": "A deterministic spaced-repetition mastery engine — no_std, replayable, projection-driven.",
+            },
+            {
+                "name": "Knowledge graph & LLM memex",
+                "prefixes": ["mesh-graph", "llm-memex"],
+                "detail": "An embedding knowledge graph with coherence measurement, plus autonomous LLM exploration trails through pluggable web, citation, and concept explorers.",
+            },
+            {
+                "name": "Motion capture",
+                "prefixes": ["mesh-mocap"],
+                "detail": "An open motion-capture pipeline: the OMF format, inverse kinematics, UDP tracking, and delta compression.",
+            },
+            {
+                "name": "Interactive fiction",
+                "prefixes": ["mesh-samizdat"],
+                "detail": "An interactive-fiction runtime with E2EE cloud sync.",
+            },
+            {
+                "name": "Anti-abuse",
+                "prefixes": ["mesh-pow"],
+                "detail": "OPRF-blinded proof-of-work for rate limiting without tracking users.",
+            },
+        ],
+    },
+]
+
+
+def mesh_crate_count(crates_dir: Path, prefixes: list[str]) -> int:
+    if not crates_dir.is_dir():
+        return 0
+    return sum(
+        1
+        for entry in crates_dir.iterdir()
+        if entry.is_dir() and any(entry.name.startswith(p) for p in prefixes)
+    )
+
+
+def build_mesh(repos: list[dict]) -> dict | None:
+    mesh_path = APPS / "mesh"
+    crates_dir = mesh_path / "crates"
+    if not crates_dir.is_dir():
+        return None
+
+    crate_total = sum(1 for p in crates_dir.rglob("Cargo.toml") if "/target/" not in str(p))
+
+    docs = mesh_path / "docs"
+    rfc_numbers = set()
+    if docs.is_dir():
+        for path in docs.rglob("[0-9]*.md"):
+            match = re.match(r"\d{3,4}", path.name)
+            if match:
+                rfc_numbers.add(match.group(0))
+    rfc_total = len(rfc_numbers)
+
+    games = mesh_path / "crates" / "games"
+    games_count = sum(1 for d in games.iterdir() if d.is_dir()) if games.is_dir() else 0
+
+    mesh_repo = next((r for r in repos if r["slug"] == "mesh"), None)
+
+    planes = []
+    for plane in MESH_PLANES:
+        verticals = []
+        for vert in plane["verticals"]:
+            if vert.get("games"):
+                count, unit = games_count, "games"
+            else:
+                count = mesh_crate_count(crates_dir, vert["prefixes"])
+                unit = "crate" if count == 1 else "crates"
+            verticals.append(
+                {"name": vert["name"], "detail": vert["detail"], "count": count, "unit": unit}
+            )
+        planes.append({"name": plane["name"], "blurb": plane["blurb"], "verticals": verticals})
+
+    return {
+        "stats": [
+            {"label": "Rust crates", "value": crate_total},
+            {"label": "RFCs", "value": rfc_total},
+            {"label": "commits", "value": mesh_repo["commits"] if mesh_repo else 0},
+            {"label": "in last 30 days", "value": mesh_repo["c30"] if mesh_repo else 0},
+        ],
+        "planes": planes,
+    }
 
 
 def git(path: Path, *args: str) -> str:
@@ -117,6 +274,7 @@ def main() -> None:
             "commits_30d": sum(repo["c30"] for repo in owned),
             "commits_7d": sum(repo["c7"] for repo in owned),
         },
+        "mesh": build_mesh(repos),
         "featured": {
             "flagship": ["mesh", "rexxy", "stricttutor"],
             "creative": [
