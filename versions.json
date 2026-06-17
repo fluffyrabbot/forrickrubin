@@ -1,5 +1,5 @@
 {
-  "current": "v4",
+  "current": "v5",
   "versions": [
     {
       "id": "v1",
@@ -24,6 +24,12 @@
       "path": "/versions/v4/",
       "released": "2026-06-17T15:36:15-07:00",
       "label": "Flesh out The Right Questions \u2014 pipeline, 25 episodes, <10 min, live link, episode picks"
+    },
+    {
+      "id": "v5",
+      "path": "/versions/v5/",
+      "released": "2026-06-17T15:58:42-07:00",
+      "label": "Warn that most repo links are private \u2014 request access from fluffyrabbot"
     }
   ]
 }
