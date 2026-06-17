@@ -365,7 +365,17 @@ def main() -> None:
         "forks": forks,
     }
 
+    # Write into the current version directory (the editable source for the
+    # latest release). The homepage redirector and /versions/<id>/ serve it.
+    manifest_path = ROOT / "versions.json"
     output = ROOT / "data.json"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text())
+        current = manifest.get("current")
+        version_dir = ROOT / "versions" / current if current else None
+        if version_dir and version_dir.is_dir():
+            output = version_dir / "data.json"
+
     output.write_text(json.dumps(payload, indent=2) + "\n")
     print(f"Wrote {output} ({len(owned)} owned repos)")
 

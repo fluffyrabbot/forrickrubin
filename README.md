@@ -28,12 +28,33 @@ npx wrangler pages deploy . --project-name=forrickrubin
 
 No bundler required — plain HTML/CSS/JS.
 
+## Versioning
+
+The site is a set of self-contained snapshots under `versions/<id>/`. The repo
+root is a redirector that routes the homepage to the **latest** version, so `/`
+always tracks the newest release while every version keeps a stable permalink at
+`/versions/<id>/`. A sticky revision bar (driven by `versions.json`) lets you
+hop between versions.
+
+Cut a release:
+
+```bash
+python3 scripts/release.py v4 "What changed"   # scaffolds versions/v4 from latest,
+                                               # repoints the homepage redirect
+# edit versions/v4/{index.html,css,js}
+python3 scripts/generate.py                    # refreshes versions/v4/data.json
+```
+
+`release.py` writes both `_redirects` (Cloudflare 302) and the `index.html`
+JS/meta-refresh fallback, and updates `versions.json`.
+
 ## Structure
 
 ```
-index.html       # showcase page
-css/style.css    # editorial dark theme
-js/app.js        # renders data.json
-data.json        # generated portfolio stats
-scripts/generate.py
+index.html            # homepage redirector → latest version
+_redirects            # Cloudflare 302 from / to the latest version
+versions.json         # release manifest (id, path, timestamp, label)
+versions/<id>/        # self-contained snapshot: index.html, css/, js/, data.json
+scripts/generate.py   # writes data.json into the current version dir
+scripts/release.py    # cut/repoint a release
 ```

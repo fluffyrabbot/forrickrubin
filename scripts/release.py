@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
-"""Freeze the current site into /versions/<id>/ and record it in versions.json.
+"""Manage versioned releases.
 
-Workflow:
-  1. Edit the live site at the repo root (index.html, css/, js/, data.json) so it
-     reflects the new version. Make sure <body data-version="vN"> matches the id.
-  2. python3 scripts/release.py vN "Short label describing what changed"
+The site is served as a set of self-contained version snapshots under
+/versions/<id>/. The repo root holds a tiny redirector (index.html) that always
+routes visitors to the *latest* version — so the homepage tracks the newest
+release automatically, while every version (including the latest) keeps a stable
+permalink at /versions/<id>/.
 
-The script copies the root snapshot into /versions/vN/ (a frozen, self-contained
-copy) and appends the entry to versions.json. The revision bar on every page reads
-the live /versions.json, so older snapshots automatically gain links to newer ones.
+Each version directory is the editable source for that version. To cut a release:
+
+  1. python3 scripts/release.py vN "Short label"      # scaffolds versions/vN/
+     (copies the current latest as a starting point and points the homepage at it)
+  2. Edit versions/vN/index.html, css/, js/ as needed.
+  3. python3 scripts/generate.py                       # refreshes versions/vN/data.json
+  4. Re-run step 1 (idempotent) if you changed the label.
+
+Running release.py with an existing id just refreshes the manifest label and
+re-points the root redirector — handy after editing in place.
 """
 
 import json
+import re
 import shutil
 import sys
 from datetime import datetime, timezone
@@ -20,9 +29,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "versions.json"
 VERSIONS_DIR = ROOT / "versions"
-
-# Files/dirs that make up a frozen, self-contained snapshot.
-SNAPSHOT_ITEMS = ["index.html", "css", "js", "data.json"]
+ROOT_INDEX = ROOT / "index.html"
+REDIRECTS = ROOT / "_redirects"
 
 
 def load_manifest() -> dict:
@@ -35,20 +43,95 @@ def iso_now() -> str:
     return datetime.now(timezone.utc).astimezone().replace(microsecond=0).isoformat()
 
 
-def snapshot(version_id: str) -> None:
+def latest_entry(manifest: dict) -> dict | None:
+    for entry in manifest["versions"]:
+        if entry["id"] == manifest.get("current"):
+            return entry
+    return manifest["versions"][-1] if manifest["versions"] else None
+
+
+def scaffold(version_id: str, source: dict | None) -> None:
+    """Create versions/<id>/ by copying the current latest version as a start."""
     target = VERSIONS_DIR / version_id
     if target.exists():
-        shutil.rmtree(target)
-    target.mkdir(parents=True)
-    for item in SNAPSHOT_ITEMS:
-        src = ROOT / item
-        if not src.exists():
-            continue
-        dst = target / item
-        if src.is_dir():
-            shutil.copytree(src, dst)
-        else:
-            shutil.copy2(src, dst)
+        return
+    target.mkdir(parents=True, exist_ok=True)
+    if source:
+        src_dir = ROOT / source["path"].strip("/")
+        if src_dir.is_dir():
+            for item in src_dir.iterdir():
+                dst = target / item.name
+                if item.is_dir():
+                    shutil.copytree(item, dst)
+                else:
+                    shutil.copy2(item, dst)
+    index = target / "index.html"
+    if index.is_file():
+        html = index.read_text()
+        html = re.sub(r'data-version="[^"]*"', f'data-version="{version_id}"', html, count=1)
+        index.write_text(html)
+
+
+def write_root_redirect(latest: dict) -> None:
+    """Route the homepage to the latest version.
+
+    Primary mechanism is a Cloudflare Pages `_redirects` 302 (server-side, no
+    flash, crawler-friendly). The root index.html is a JS/meta-refresh fallback
+    for any host that doesn't honor `_redirects`. A 302 (not 301) keeps "latest"
+    free to move to a newer version later.
+    """
+    path = latest["path"] if latest else "/versions/v1/"
+
+    REDIRECTS.write_text(f"/    {path}    302\n")
+
+    ROOT_INDEX.write_text(
+        f"""<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>forrickrubin — agentic portfolio</title>
+    <meta
+      name="description"
+      content="A git-log-driven showcase of agentically built repos — E2EE infrastructure, creative production pipelines, and a June 2026 greenfield burst."
+    />
+    <link rel="canonical" href="{path}" />
+    <script>
+      // Route to the latest version. Manifest-driven, so the homepage always
+      // tracks the newest release; falls back to the path baked in at release.
+      (function () {{
+        var fallback = "{path}";
+        fetch("/versions.json", {{ cache: "no-store" }})
+          .then(function (r) {{ return r.json(); }})
+          .then(function (m) {{
+            var versions = m.versions || [];
+            var cur = versions.filter(function (v) {{ return v.id === m.current; }})[0];
+            if (!cur) cur = versions[versions.length - 1];
+            location.replace(cur && cur.path ? cur.path : fallback);
+          }})
+          .catch(function () {{ location.replace(fallback); }});
+      }})();
+    </script>
+    <meta http-equiv="refresh" content="2;url={path}" />
+    <style>
+      body {{
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0c0b0a;
+        color: #9a8f82;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+      }}
+      a {{ color: #e8a849; }}
+    </style>
+  </head>
+  <body>
+    <p>Routing to the latest version… <a href="{path}">open it directly →</a></p>
+  </body>
+</html>
+"""
+    )
 
 
 def main() -> None:
@@ -61,6 +144,10 @@ def main() -> None:
     manifest = load_manifest()
     existing = {v["id"]: v for v in manifest["versions"]}
 
+    # Scaffold a new version directory from the current latest, if needed.
+    if version_id not in existing:
+        scaffold(version_id, latest_entry(manifest))
+
     entry = {
         "id": version_id,
         "path": f"/versions/{version_id}/",
@@ -68,14 +155,14 @@ def main() -> None:
         "label": label or existing.get(version_id, {}).get("label", ""),
     }
 
-    snapshot(version_id)
-
     manifest["versions"] = [v for v in manifest["versions"] if v["id"] != version_id]
     manifest["versions"].append(entry)
     manifest["current"] = version_id
     MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n")
 
-    print(f"Froze {version_id} -> versions/{version_id}/  ({entry['released']})")
+    write_root_redirect(entry)
+
+    print(f"Released {version_id} ({entry['released']}); homepage routes to {entry['path']}")
 
 
 if __name__ == "__main__":
