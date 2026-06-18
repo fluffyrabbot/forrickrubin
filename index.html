@@ -8,12 +8,12 @@
       name="description"
       content="A git-log-driven showcase of agentically built repos — E2EE infrastructure, creative production pipelines, and a June 2026 greenfield burst."
     />
-    <link rel="canonical" href="/versions/v7/" />
+    <link rel="canonical" href="/versions/v8/" />
     <script>
       // Route to the latest version. Manifest-driven, so the homepage always
       // tracks the newest release; falls back to the path baked in at release.
       (function () {
-        var fallback = "/versions/v7/";
+        var fallback = "/versions/v8/";
         fetch("/versions.json", { cache: "no-store" })
           .then(function (r) { return r.json(); })
           .then(function (m) {
@@ -25,21 +25,21 @@
           .catch(function () { location.replace(fallback); });
       })();
     </script>
-    <meta http-equiv="refresh" content="2;url=/versions/v7/" />
+    <meta http-equiv="refresh" content="2;url=/versions/v8/" />
     <style>
       body {
         margin: 0;
         min-height: 100vh;
         display: grid;
         place-items: center;
-        background: #0c0b0a;
-        color: #9a8f82;
+        background: #0b0a0e;
+        color: #968fa0;
         font-family: "IBM Plex Mono", ui-monospace, monospace;
       }
-      a { color: #e8a849; }
+      a { color: #d26a93; }
     </style>
   </head>
   <body>
-    <p>Routing to the latest version… <a href="/versions/v7/">open it directly →</a></p>
+    <p>Routing to the latest version… <a href="/versions/v8/">open it directly →</a></p>
   </body>
 </html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agentic Portfolio — fluffyrabbot</title>
+    <meta
+      name="description"
+      content="A git-log-driven showcase of agentically built repos — E2EE infrastructure, creative production pipelines, and a June 2026 greenfield burst."
+    />
+    <meta property="og:title" content="Agentic Portfolio" />
+    <meta
+      property="og:description"
+      content="1,000+ commits/month across creative production systems and E2EE infrastructure."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body data-version="v8">
+    <nav class="version-bar" aria-label="Version history">
+      <div class="wrap">
+        <a class="vb-home" href="/">forrickrubin</a>
+        <span class="vb-label">revisions</span>
+        <span class="vb-links" id="version-links"
+          ><a href="/versions/v1/">v1</a
+          ><a href="/versions/v2/">v2</a
+          ><a href="/versions/v3/">v3</a
+          ><a href="/versions/v4/">v4</a
+          ><a href="/versions/v5/">v5</a
+          ><a href="/versions/v6/">v6</a
+          ><a href="/versions/v7/">v7</a
+          ><a href="/versions/v8/" aria-current="page">v8</a></span
+        >
+      </div>
+    </nav>
+    <script>
+      (function () {
+        var here = document.body.dataset.version;
+        var mount = document.getElementById("version-links");
+        function fmt(iso) {
+          var d = new Date(iso);
+          if (isNaN(d)) return "";
+          return d.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+        }
+        fetch("/versions.json")
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (manifest) {
+            var versions = manifest.versions || [];
+            mount.innerHTML = versions
+              .map(function (v) {
+                var current = v.id === here;
+                var ts = fmt(v.released);
+                return (
+                  '<a href="' +
+                  v.path +
+                  '"' +
+                  (current ? ' aria-current="page"' : "") +
+                  ' title="' +
+                  (v.label || "") +
+                  '"><b>' +
+                  v.id +
+                  "</b>" +
+                  (ts ? '<time>' + ts + "</time>" : "") +
+                  "</a>"
+                );
+              })
+              .join("");
+          })
+          .catch(function () {
+            /* keep static fallback */
+          });
+      })();
+    </script>
+
+    <header class="site-header">
+      <div class="wrap">
+        <p class="eyebrow">YC AI Summer Residency · Rick Rubin</p>
+        <h1 class="hero-title">Creative systems built<br />with agents as collaborators</h1>
+        <p class="hero-lede">
+          Forty-seven repos, eighteen thousand commits, and a June burst that shipped
+          YouTube episodes, an event-sourced forum platform, and an E2EE canvas — all
+          agentically built, architecturally governed.
+        </p>
+        <div class="hero-meta">
+          <span><strong id="stat-owned">—</strong> owned repos</span>
+          <span><strong id="stat-commits">—</strong> total commits</span>
+          <span><strong id="stat-30d">—</strong> last 30 days</span>
+          <span id="generated-at">—</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="stats">
+        <div class="wrap">
+          <p class="section-label">Portfolio</p>
+          <h2 class="section-title">Measured velocity</h2>
+          <div class="stats-grid" id="stats-grid"></div>
+        </div>
+      </section>
+
+      <section id="narrative">
+        <div class="wrap">
+          <p class="section-label">Application narrative</p>
+          <h2 class="section-title">What this demonstrates</h2>
+          <div class="narrative">
+            <p>
+              I build creative production systems with AI agents as first-class
+              collaborators. Underneath sits <strong>mesh</strong> — 15,000+ commits,
+              1,400+ Rust crates, 900+ RFCs — an E2EE, append-only event store with
+              content-addressed blobs and server-blind encrypted search, used as a
+              substrate for a growing set of verticals: <strong>rexxy</strong> (P2P
+              connectivity without metadata) and <strong>collablab</strong> (E2EE canvas)
+              are <em>extracted</em> from it, not bolted on. On top sit the creative
+              pipelines — <strong>therightquestions</strong> (research → script → voice →
+              publish), <strong>rabbotchan</strong> (provenance-aware video),
+              <strong>manicanim</strong> (typography animation for agent co-editing). I'm
+              not using AI to write code faster — I've built the architectural contracts,
+              proof systems, and creative pipelines that let agents ship real products
+              daily.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="mesh">
+        <div class="wrap">
+          <p class="section-label">Inside the substrate</p>
+          <h2 class="section-title">mesh, in full</h2>
+          <p class="mesh-lede">
+            One repo, one server workspace — and a deliberately sprawling ambition.
+            mesh is an E2EE event store that became a platform: consumer apps,
+            monument-grade educational games, and a developer infrastructure layer
+            that spans crypto, blind search, a protocol compiler, supply-chain
+            attestation, compliance automation, motion capture, and more. Every
+            count below is read live from the codebase.
+          </p>
+          <div class="mesh-stats" id="mesh-stats"></div>
+          <div class="mesh-planes" id="mesh-planes"></div>
+        </div>
+      </section>
+
+      <section id="trq">
+        <div class="wrap">
+          <p class="section-label">Creative pipeline, end to end</p>
+          <h2 class="section-title">The Right Questions</h2>
+          <div id="trq-content"></div>
+        </div>
+      </section>
+
+      <section id="video">
+        <div class="wrap">
+          <p class="section-label">Watch</p>
+          <h2 class="section-title">A music video, from psychosismv</h2>
+          <div class="video-embed">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/TlIU0-OcoyQ?vq=hd1080&rel=0"
+              title="Music video rendered with psychosismv"
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+          <p class="video-caption">
+            The output of <strong>psychosismv</strong> — a beat-synced “rapidfire
+            LLM-journey” music video rendered in Remotion, then uploaded to YouTube.
+            <a
+              href="https://www.youtube.com/watch?v=TlIU0-OcoyQ"
+              target="_blank"
+              rel="noopener"
+              >Watch on YouTube →</a
+            >
+          </p>
+        </div>
+      </section>
+
+      <section id="featured">
+        <div class="wrap">
+          <p class="section-label">Highlighted work</p>
+          <h2 class="section-title">Repos that tell the story</h2>
+          <div class="access-note" role="note">
+            <span class="access-note-tag">Access</span>
+            <p>
+              Most of these repositories are <strong>private</strong>. The links below
+              and in the catalog point to
+              <code>github.com/fluffyrabbot/&lt;repo&gt;</code> and will 404 unless you
+              have access — request it from
+              <a href="https://github.com/fluffyrabbot" target="_blank" rel="noopener"
+                >fluffyrabbot</a
+              >
+              on GitHub.
+            </p>
+          </div>
+          <div class="tier-tabs" id="tier-tabs"></div>
+          <div class="repo-grid" id="featured-grid"></div>
+        </div>
+      </section>
+
+      <section id="burst">
+        <div class="wrap">
+          <p class="section-label">June 2026</p>
+          <h2 class="section-title">Greenfield burst timeline</h2>
+          <div class="burst-timeline" id="burst-timeline"></div>
+        </div>
+      </section>
+
+      <section id="catalog">
+        <div class="wrap">
+          <p class="section-label">Full catalog</p>
+          <h2 class="section-title">All owned repos</h2>
+          <p class="access-inline">
+            Repo links are mostly <strong>private</strong> — request access from
+            <a href="https://github.com/fluffyrabbot" target="_blank" rel="noopener"
+              >fluffyrabbot</a
+            >
+            on GitHub to view them.
+          </p>
+          <div class="filter-bar">
+            <input
+              type="search"
+              id="repo-search"
+              placeholder="Filter by name or description…"
+              aria-label="Filter repositories"
+            />
+            <label>
+              <input type="checkbox" id="active-only" checked />
+              Active in last 30 days
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Repo</th>
+                  <th>Commits</th>
+                  <th>30d</th>
+                  <th>Velocity</th>
+                  <th>Last</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="repo-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="presence">
+        <div class="wrap">
+          <img
+            class="profile-card"
+            src="./discord-profile.png"
+            alt="fluffy rabbit — Discord profile"
+            width="455"
+            height="670"
+            loading="lazy"
+          />
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>
+          Applying to
+          <a href="https://events.ycombinator.com/qSAodVvxK" target="_blank" rel="noopener"
+            >AI Summer Residency with Rick Rubin</a
+          >
+          · Data sourced from local git logs in <code>~/apps</code>
+        </p>
+        <p>Regenerate with <code>python3 scripts/generate.py</code></p>
+      </div>
+    </footer>
+
+    <script src="./js/app.js" type="module"></script>
+    <script>
+      fetch("./data.json")
+        .then((r) => r.json())
+        .then((d) => {
+          document.getElementById("stat-owned").textContent = d.stats.owned_repos;
+          document.getElementById("stat-commits").textContent =
+            d.stats.total_commits.toLocaleString();
+          document.getElementById("stat-30d").textContent =
+            d.stats.commits_30d.toLocaleString();
+        });
+    </script>
+  </body>
+</html>

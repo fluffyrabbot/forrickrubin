@@ -119,11 +119,11 @@ def write_root_redirect(latest: dict) -> None:
         min-height: 100vh;
         display: grid;
         place-items: center;
-        background: #0c0b0a;
-        color: #9a8f82;
+        background: #0b0a0e;
+        color: #968fa0;
         font-family: "IBM Plex Mono", ui-monospace, monospace;
       }}
-      a {{ color: #e8a849; }}
+      a {{ color: #d26a93; }}
     </style>
   </head>
   <body>
