@@ -1,5 +1,5 @@
 {
-  "current": "v8",
+  "current": "v9",
   "versions": [
     {
       "id": "v1",
@@ -48,6 +48,12 @@
       "path": "/versions/v8/",
       "released": "2026-06-17T18:58:18-07:00",
       "label": "Re-hue the site from amber to a rose/violet palette"
+    },
+    {
+      "id": "v9",
+      "path": "/versions/v9/",
+      "released": "2026-06-19T16:23:53-07:00",
+      "label": "Add a testimonial screenshot \u2014 a 'voice of reason' note, as a proxy for teaching ability"
     }
   ]
 }
